@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "cron": "^1.2.1",
+    "dotenv": "^4.0.0",
     "node-telegram-bot-api": "^0.27.1",
     "pm2": "^2.5.0",
     "redis": "^2.7.1"

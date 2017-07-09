@@ -1,5 +1,7 @@
 'use strict';
 
+if (!process.env.PRODUCTION) require('dotenv').load();
+
 const redis = require('redis');
 const client = redis.createClient(process.env.REDIS_URL);
 

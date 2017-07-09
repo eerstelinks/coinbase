@@ -1,5 +1,7 @@
 'use strict';
 
+if (!process.env.PRODUCTION) require('dotenv').load();
+
 const TelegramBot = require('node-telegram-bot-api');
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_GROUP = process.env.TELEGRAM_GROUP;

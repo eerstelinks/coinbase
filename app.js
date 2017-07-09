@@ -1,5 +1,7 @@
 'use strict';
 
+if (!process.env.PRODUCTION) require('dotenv').load();
+
 const TIMEZONE = 'Europe/Amsterdam';
 const PRODUCTION = process.env.PRODUCTION === 'true';
 const DESCRIPTION = require('./package.json').description;
@@ -19,7 +21,7 @@ if (PRODUCTION === true && process.env.CRON_TIME) {
   run();
 }
 
-function leftPad(number, length = 6) {
+function leftPad(number, length = 5) {
  return (' '.repeat(length) + Math.round(number)).slice(-length);
 }
 
@@ -43,22 +45,27 @@ async function run() {
     const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
     const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
 
+    console.log('amount:          ', leftPad(amount));
+
     if (notify) {
       redis.set(`BTC`, btcRate * 0.5);
       redis.set(`ETH`, ethRate * 10);
       redis.set(`LTC`, ltcRate * 15);
 
+      console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
+      console.log('[INFO] currentRate:     ', leftPad(currentRate), 'btc:', leftPad(btcRate * 0.5), 'eth:', leftPad(ethRate * 10), 'ltc:', leftPad(ltcRate * 15));
+      console.log('[INFO] lastRate (redis):', leftPad(lastRate), 'btc:', leftPad(btcRedis), 'eth:', leftPad(ethRedis), 'ltc:', leftPad(ltcRedis));
+
       send(`We have a ${profit} of €${amount}
 <pre>
       last     now
-BTC ${leftPad(btcRedis)}  ${leftPad(btcRate * 0.5)}
-ETH ${leftPad(ethRedis)}  ${leftPad(ethRate * 10)}
-LTC ${leftPad(ltcRedis)}  ${leftPad(ltcRate * 15)}
+BTC ${leftPad(btcRedis)} ${leftPad(btcRate * 0.5)}
+ETH ${leftPad(ethRedis)} ${leftPad(ethRate * 10)}
+LTC ${leftPad(ltcRedis)} ${leftPad(ltcRate * 15)}
 </pre>
 https://www.coinbase.com/charts`);
-      console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
     } else {
-      console.log(`[INFO] We have a ${profit} of €${amount}`);
+      console.log(`[INFO] We have a ${profit} of € ${amount}`);
     }
   } catch(error) {
     console.error(error);
