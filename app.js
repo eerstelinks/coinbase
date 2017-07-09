@@ -40,10 +40,10 @@ async function run() {
 
     let notify = false;
     if (currentRate < (lastRate - ALERT_DELTA)) {
-      console.log('notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA}');
+      console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA}`);
       notify = true;
     } else if (currentRate > (lastRate + ALERT_DELTA)) {
-      console.log('notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA}');
+      console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA}`);
       notify = true;
     }
 
