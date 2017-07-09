@@ -39,13 +39,8 @@ async function run() {
     const lastRate = btcRedis + ethRedis + ltcRedis;
 
     let notify = false;
-    if (currentRate < (lastRate - ALERT_DELTA)) {
-      console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA}`);
-      notify = true;
-    } else if (currentRate > (lastRate + ALERT_DELTA)) {
-      console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA}`);
-      notify = true;
-    }
+    if (currentRate < (lastRate - ALERT_DELTA)) notify = true;
+    else if (currentRate > (lastRate + ALERT_DELTA)) notify = true;
 
     const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
     const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
