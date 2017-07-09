@@ -4,5 +4,12 @@
   "description": "Crawl coinbase excange rate",
   "main": "app.js",
   "author": "Adriaan van Rossum <git@adriaan.io>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon app.js",
+    "heroku": "pm2 start app.js -i 0"
+  },
+  "dependencies": {
+    "pm2": "^2.5.0"
+  }
 }
