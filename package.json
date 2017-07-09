@@ -1,0 +1,8 @@
+{
+  "name": "eerstelinks-coinbase",
+  "version": "1.0.0",
+  "description": "Crawl coinbase excange rate",
+  "main": "app.js",
+  "author": "Adriaan van Rossum <git@adriaan.io>",
+  "license": "MIT"
+}
