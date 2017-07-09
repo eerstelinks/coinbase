@@ -1,15 +1,21 @@
 {
   "name": "eerstelinks-coinbase",
   "version": "1.0.0",
-  "description": "Crawl coinbase excange rate",
+  "description": "Coinbase crawler",
   "main": "app.js",
   "author": "Adriaan van Rossum <git@adriaan.io>",
   "license": "MIT",
+  "engines": {
+    "node": "7.10.0",
+    "npm": "4.2.0"
+  },
   "scripts": {
     "start": "nodemon app.js",
     "heroku": "pm2 start app.js -i 0"
   },
   "dependencies": {
-    "pm2": "^2.5.0"
+    "cron": "^1.2.1",
+    "pm2": "^2.5.0",
+    "redis": "^2.7.1"
   }
 }
