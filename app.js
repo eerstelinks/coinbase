@@ -5,8 +5,9 @@ const PRODUCTION = process.env.PRODUCTION === 'true';
 const DESCRIPTION = require('./package.json').description;
 const getRate = require('./get').getRate;
 const redis = require('./redis');
+const send = require('./telegram').send;
 const http = require('http');
-const ALERT_DELTA = 100;
+const ALERT_DELTA = process.env.ALERT_DELTA === 100;
 const INVESTMENT = 3989.35;
 
 if (PRODUCTION === true && process.env.CRON_TIME) {
@@ -16,6 +17,10 @@ if (PRODUCTION === true && process.env.CRON_TIME) {
   }, null, true, TIMEZONE);
 } else {
   run();
+}
+
+function leftPad(number, length = 6) {
+ return (' '.repeat(length) + Math.round(number)).slice(-length);
 }
 
 async function run() {
@@ -43,7 +48,15 @@ async function run() {
       redis.set(`ETH`, ethRate * 10);
       redis.set(`LTC`, ltcRate * 15);
 
-      console.log(`[INFO] ALERT We have a ${profit} of €${amount}`);
+      send(`We have a ${profit} of €${amount}
+<pre>
+      last     now
+BTC ${leftPad(btcRedis)}  ${leftPad(btcRate * 0.5)}
+ETH ${leftPad(ethRedis)}  ${leftPad(ethRate * 10)}
+LTC ${leftPad(ltcRedis)}  ${leftPad(ltcRate * 15)}
+</pre>
+https://www.coinbase.com/charts`);
+      console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
     } else {
       console.log(`[INFO] We have a ${profit} of €${amount}`);
     }
