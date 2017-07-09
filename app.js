@@ -9,7 +9,7 @@ const getRate = require('./get').getRate;
 const redis = require('./redis');
 const send = require('./telegram').send;
 const http = require('http');
-const ALERT_DELTA = process.env.ALERT_DELTA === 100;
+const ALERT_DELTA = process.env.ALERT_DELTA || 100;
 const INVESTMENT = 3989.35;
 
 if (PRODUCTION === true && process.env.CRON_TIME) {
