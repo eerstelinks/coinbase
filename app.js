@@ -45,8 +45,6 @@ async function run() {
     const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
     const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
 
-    console.log('amount:          ', leftPad(amount));
-
     if (notify) {
       redis.set(`BTC`, btcRate * 0.5);
       redis.set(`ETH`, ethRate * 10);
