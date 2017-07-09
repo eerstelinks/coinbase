@@ -56,7 +56,7 @@ async function run() {
 
       send(`We have a ${profit} of €${amount}
 <pre>
-      last     now
+     last   now
 BTC ${leftPad(btcRedis)} ${leftPad(btcRate * 0.5)}
 ETH ${leftPad(ethRedis)} ${leftPad(ethRate * 10)}
 LTC ${leftPad(ltcRedis)} ${leftPad(ltcRate * 15)}
