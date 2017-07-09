@@ -11,7 +11,7 @@
   },
   "scripts": {
     "develop": "nodemon app.js",
-    "start": "pm2 start app.js -i 1"
+    "start": "node ./node_modules/.bin/pm2 start app.js -i 1 --attach"
   },
   "dependencies": {
     "cron": "^1.2.1",
