@@ -39,23 +39,33 @@ async function run() {
     const lastRate = btcRedis + ethRedis + ltcRedis;
 
     let notify = false;
-    if (currentRate < (lastRate - ALERT_DELTA)) notify = true;
-    else if (currentRate > (lastRate + ALERT_DELTA)) notify = true;
-
+    if (currentRate < (lastRate - ALERT_DELTA)) {
+      console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA}`);
+      notify = true;
+    } else if (currentRate > (lastRate + ALERT_DELTA)) {
+      console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA}`);
+      notify = true;
+    } else {
+      console.log(`don't notify currentRate: ${currentRate} lastRate: ${lastRate} ALERT_DELTA: ${ALERT_DELTA}`);
+    }
     const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
     const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
 
     if (notify) {
+      console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
+      console.log('[INFO] currentRate:     ', leftPad(currentRate), 'btc:', leftPad(btcRate * 0.5), 'eth:', leftPad(ethRate * 10), 'ltc:', leftPad(ltcRate * 15));
+      console.log('[INFO] lastRate (redis):', leftPad(lastRate), 'btc:', leftPad(btcRedis), 'eth:', leftPad(ethRedis), 'ltc:', leftPad(ltcRedis));
+
       redis.set(`BTC`, btcRate * 0.5);
       redis.set(`ETH`, ethRate * 10);
       redis.set(`LTC`, ltcRate * 15);
 
       send(`We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>
 <pre>
-     last   now  diff
-BTC ${leftPad(btcRedis)} ${leftPad(btcRate * 0.5)} ${leftPad(btcRate * 0.5 - btcRedis)}
-ETH ${leftPad(ethRedis)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - ethRedis)}
-LTC ${leftPad(ltcRedis)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - ltcRedis)}
+         buy   now  diff
+.5 BTC ${leftPad(2292.86 * 0.5)} ${leftPad(btcRate * 0.5)} ${leftPad(btcRate * 0.5 - 2292.86 * 0.5)}
+10 ETH ${leftPad(217.18 * 10)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - 217.18 * 10)}
+15 LTC ${leftPad(44.74 * 15)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - 44.74 * 15)}
 </pre>
 https://coinbase.com/charts`);
     } else {
