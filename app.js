@@ -4,13 +4,10 @@ const TIMEZONE = 'Europe/Amsterdam';
 const PRODUCTION = process.env.PRODUCTION === 'true';
 const DESCRIPTION = require('./package.json').description;
 const getRate = require('./get').getRate;
+const redis = require('./redis');
 const http = require('http');
-const redis = require('redis');
-const client = redis.createClient(process.env.REDIS_URL);
-
-client.on('error', error => {
-  console.error(error);
-});
+const ALERT_DELTA = 100;
+const INVESTMENT = 3989.35;
 
 if (PRODUCTION === true && process.env.CRON_TIME) {
   const CronJob = require('cron').CronJob;
@@ -23,9 +20,33 @@ if (PRODUCTION === true && process.env.CRON_TIME) {
 
 async function run() {
   try {
-    const [btc, eth, ltc] = await Promise.all([getRate(`BTC`), getRate(`ETH`), getRate(`LTC`)]);
-    client.get('btc', redis.print);
-    console.log(`btc`, btc, 'eth', eth, 'ltc', ltc);
+    const [btcRate, ethRate, ltcRate, btcRedis, ethRedis, ltcRedis] = await Promise.all([
+      getRate(`BTC`),
+      getRate(`ETH`),
+      getRate(`LTC`),
+      redis.get(`BTC`),
+      redis.get(`ETH`),
+      redis.get(`LTC`)
+    ]);
+    const currentRate = btcRate * 0.5 + ethRate * 10 + ltcRate * 15;
+    const lastRate = btcRedis + ethRedis + ltcRedis;
+
+    let notify = false;
+    if (currentRate < (lastRate - ALERT_DELTA)) notify = true;
+    else if (currentRate > (lastRate + ALERT_DELTA)) notify = true;
+
+    const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
+    const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
+
+    if (notify) {
+      redis.set(`BTC`, btcRate * 0.5);
+      redis.set(`ETH`, ethRate * 10);
+      redis.set(`LTC`, ltcRate * 15);
+
+      console.log(`[INFO] ALERT We have a ${profit} of €${amount}`);
+    } else {
+      console.log(`[INFO] We have a ${profit} of €${amount}`);
+    }
   } catch(error) {
     console.error(error);
   }

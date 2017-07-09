@@ -27,7 +27,7 @@ function getRate(coin) {
   return new Promise(async (resolve, reject) => {
     try {
       const rates = await getJSON(`https://api.coinbase.com/v2/exchange-rates?currency=${coin}`);
-      const euro = rates.data.rates.EUR;
+      const euro = parseFloat(rates.data.rates.EUR, 10);
       return resolve(euro);
     } catch(error) {
       return reject(error);
