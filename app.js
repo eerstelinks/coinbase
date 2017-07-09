@@ -50,18 +50,14 @@ async function run() {
       redis.set(`ETH`, ethRate * 10);
       redis.set(`LTC`, ltcRate * 15);
 
-      console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
-      console.log('[INFO] currentRate:     ', leftPad(currentRate), 'btc:', leftPad(btcRate * 0.5), 'eth:', leftPad(ethRate * 10), 'ltc:', leftPad(ltcRate * 15));
-      console.log('[INFO] lastRate (redis):', leftPad(lastRate), 'btc:', leftPad(btcRedis), 'eth:', leftPad(ethRedis), 'ltc:', leftPad(ltcRedis));
-
-      send(`We have a ${profit} of €${amount}
+      send(`We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>
 <pre>
-     last   now
-BTC ${leftPad(btcRedis)} ${leftPad(btcRate * 0.5)}
-ETH ${leftPad(ethRedis)} ${leftPad(ethRate * 10)}
-LTC ${leftPad(ltcRedis)} ${leftPad(ltcRate * 15)}
+     last   now  diff
+BTC ${leftPad(btcRedis)} ${leftPad(btcRate * 0.5)} ${leftPad(btcRate * 0.5 - btcRedis)}
+ETH ${leftPad(ethRedis)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - ethRedis)}
+LTC ${leftPad(ltcRedis)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - ltcRedis)}
 </pre>
-https://www.coinbase.com/charts`);
+https://coinbase.com/charts`);
     } else {
       console.log(`[INFO] We have a ${profit} of € ${amount}`);
     }
