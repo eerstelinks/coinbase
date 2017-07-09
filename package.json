@@ -10,8 +10,8 @@
     "npm": "4.2.0"
   },
   "scripts": {
-    "start": "nodemon app.js",
-    "heroku": "pm2 start app.js -i 0"
+    "develop": "nodemon app.js",
+    "start": "pm2 start app.js -i 0"
   },
   "dependencies": {
     "cron": "^1.2.1",
