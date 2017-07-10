@@ -57,7 +57,7 @@ async function run(options = { return: false }) {
 10 ETH ${leftPad(217.18 * 10)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - 217.18 * 10)}
 15 LTC ${leftPad(44.74 * 15)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - 44.74 * 15)}
 </pre>
-https://coinbase.com/charts`;
+<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a>`;
 
     if (options.return) {
       return message;
