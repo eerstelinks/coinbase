@@ -52,7 +52,7 @@ async function run(options = { return: false }) {
     const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
     const message = `We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>
 <pre>
-       buy   now  diff
+         buy   now  diff
 .5 BTC ${leftPad(2292.86 * 0.5)} ${leftPad(btcRate * 0.5)} ${leftPad(btcRate * 0.5 - 2292.86 * 0.5)}
 10 ETH ${leftPad(217.18 * 10)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - 217.18 * 10)}
 15 LTC ${leftPad(44.74 * 15)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - 44.74 * 15)}
