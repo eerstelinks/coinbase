@@ -6,7 +6,7 @@
   "author": "Adriaan van Rossum <git@adriaan.io>",
   "license": "MIT",
   "engines": {
-    "node": "7.10.0",
+    "node": "7.10.1",
     "npm": "4.2.0"
   },
   "scripts": {
