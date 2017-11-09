@@ -102,9 +102,6 @@ async function run(options = { return: false }) {
       counter++;
     }
 
-    // const currentRate = btcRate * 0.5 + ethRate * 15 + ltcRate * 15;
-    // const lastRate = btcRedis + ethRedis + ltcRedis;
-
     let notify = false;
     if (currentRate < (lastRate - ALERT_DELTA)) {
       console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA})`);
