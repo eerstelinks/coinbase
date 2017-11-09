@@ -120,7 +120,7 @@ async function run(options = { return: false }) {
     const amount = Math.round((currentRate - totalInvested < 0) ? (currentRate - totalInvested) * -1 : currentRate - totalInvested);
     const lines = [`We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>`];
     lines.push('<pre>');
-    lines.push('          buy   now  diff');
+    lines.push('         buy   now  diff');
 
     for (const coin in transactions) {
       const amount = transactions[coin];
@@ -129,12 +129,12 @@ async function run(options = { return: false }) {
       for (const transaction of TRANSACTIONS) {
         if (transaction.coin === coin && transaction.amount > 0) lastValue += transaction.value;
       }
-      lines.push(`${leftPad(amount, { length: 3, round: false })} ${coin} ${leftPad(lastValue)} ${leftPad(rate * amount)} ${leftPad(rate * amount - lastValue)}`);
+      lines.push(`${leftPad(amount, { length: 2, round: false })} ${coin} ${leftPad(lastValue)} ${leftPad(rate * amount)} ${leftPad(rate * amount - lastValue)}`);
     }
 
     lines.push('');
-    lines.push('history   buy  sell  diff');
-    lines.push(` .5 BTC ${leftPad(1129.60 + 16.83)} ${leftPad(3185.57 - 48.18)} ${leftPad(1990.96)}`);
+    lines.push('history  buy  sell  diff');
+    lines.push(`.5 BTC ${leftPad(1129.60 + 16.83)} ${leftPad(3185.57 - 48.18)} ${leftPad(1990.96)}`);
 
     lines.push('</pre>');
     lines.push('<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a>');
