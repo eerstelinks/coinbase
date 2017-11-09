@@ -13,7 +13,7 @@ function get(key) {
   return new Promise((resolve, reject) => {
     client.get(key, (error, reply) => {
       if (error) return reject(error);
-      if (!reply) return resolve(reply);
+      if (!reply) return resolve(0);
       return resolve(parseFloat(reply, 10));
     });
   });

@@ -10,7 +10,50 @@ const redis = require('./redis');
 const send = require('./telegram').send;
 const http = require('http');
 const ALERT_DELTA = parseFloat(process.env.ALERT_DELTA, 10) || 100;
-const INVESTMENT = 3989.35;
+
+const TRANSACTIONS = [{
+  coin: 'BTC',
+  amount: +0.5,
+  value: 1129.60 + 16.83
+}, {
+  coin: 'ETH',
+  amount: +10,
+  value: 2139.95 + 31.89
+}, {
+  coin: 'LTC',
+  amount: +15,
+  value: 661.23 + 9.85
+}, {
+  coin: 'BCH',
+  amount: +0.5,
+  value: 0
+}, {
+  coin: 'BTC',
+  amount: -0.5,
+  value: 3185.57 //- 48.18
+}, {
+  coin: 'ETH',
+  amount: +5,
+  value: 1367.70 + 20.38
+}];
+
+const transactions = {};
+let totalInvested = 0;
+
+for (const transaction of TRANSACTIONS) {
+  const coin = transaction.coin;
+
+  // What do we have in our current wallet?
+  if (transactions[coin]) transactions[coin] += transaction.amount;
+  else transactions[coin] = transaction.amount;
+
+  // Delete when total amount of a coin is 0
+  if (transactions[coin] === 0) delete transactions[coin];
+
+  // What did we invest in total (invested money - money sold coins)
+  if (transaction.amount < 0) totalInvested -= transaction.value;
+  else totalInvested += transaction.value;
+}
 
 if (PRODUCTION === true && process.env.CRON_TIME) {
   const CronJob = require('cron').CronJob;
@@ -21,57 +64,92 @@ if (PRODUCTION === true && process.env.CRON_TIME) {
   run();
 }
 
-function leftPad(number, length = 5) {
- return (' '.repeat(length) + Math.round(number)).slice(-length);
+function leftPad(number, options = { length: 5, round: true }) {
+  if (options.round) number = Math.round(number)
+  return (' '.repeat(options.length) + number).slice(-options.length);
 }
 
 async function run(options = { return: false }) {
   try {
-    const [btcRate, ethRate, ltcRate, btcRedis, ethRedis, ltcRedis] = await Promise.all([
-      getRate(`BTC`),
-      getRate(`ETH`),
-      getRate(`LTC`),
-      redis.get(`BTC`),
-      redis.get(`ETH`),
-      redis.get(`LTC`)
-    ]);
-    const currentRate = btcRate * 0.5 + ethRate * 10 + ltcRate * 15;
-    const lastRate = btcRedis + ethRedis + ltcRedis;
+    const promises = [];
+    for (const transaction in transactions) {
+      const amount = transactions[transaction];
+      promises.push(getRate(transaction));
+      promises.push(redis.get(transaction));
+    }
+
+    const rates = await Promise.all(promises);
+
+    const currentRates = {};
+    const currentRatesCoins = {};
+    let counter = 0;
+    let currentRate = 0;
+    let lastRate = 0;
+
+    for (const rate of rates) {
+      const coinIndex = Math.floor(counter / 2);
+      const coinName = Object.keys(transactions)[coinIndex];
+      const coinAmount = transactions[coinName];
+      const isRedis = !!(counter % 2);
+      if (isRedis) {
+        lastRate += rate;
+      }
+      else {
+        currentRates[coinName] = rate;
+        currentRatesCoins[coinName] = rate * coinAmount;
+        currentRate += rate * coinAmount;
+      }
+      counter++;
+    }
+
+    // const currentRate = btcRate * 0.5 + ethRate * 15 + ltcRate * 15;
+    // const lastRate = btcRedis + ethRedis + ltcRedis;
 
     let notify = false;
     if (currentRate < (lastRate - ALERT_DELTA)) {
-      console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA}`);
+      console.log(`notify because ${currentRate} < (${lastRate} - ${ALERT_DELTA})`);
       notify = true;
     } else if (currentRate > (lastRate + ALERT_DELTA)) {
-      console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA}`);
+      console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA})`);
       notify = true;
     } else {
       console.log(`don't notify currentRate: ${currentRate} lastRate: ${lastRate} ALERT_DELTA: ${ALERT_DELTA}`);
     }
-    const profit = (currentRate - INVESTMENT < 0) ? 'loss' : 'profit';
-    const amount = Math.round((currentRate - INVESTMENT < 0) ? (currentRate - INVESTMENT) * -1 : currentRate - INVESTMENT);
-    const message = `We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>
-<pre>
-         buy   now  diff
-.5 BTC ${leftPad(2292.86 * 0.5)} ${leftPad(btcRate * 0.5)} ${leftPad(btcRate * 0.5 - 2292.86 * 0.5)}
-10 ETH ${leftPad(217.18 * 10)} ${leftPad(ethRate * 10)} ${leftPad(ethRate * 10 - 217.18 * 10)}
-15 LTC ${leftPad(44.74 * 15)} ${leftPad(ltcRate * 15)} ${leftPad(ltcRate * 15 - 44.74 * 15)}
-</pre>
-<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a>`;
+
+    const profit = (currentRate - totalInvested < 0) ? 'loss' : 'profit';
+    const amount = Math.round((currentRate - totalInvested < 0) ? (currentRate - totalInvested) * -1 : currentRate - totalInvested);
+    const lines = [`We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>`];
+    lines.push('<pre>');
+    lines.push('          buy   now  diff');
+
+    for (const coin in transactions) {
+      const amount = transactions[coin];
+      const rate = currentRates[coin];
+      let lastValue = 0;
+      for (const transaction of TRANSACTIONS) {
+        if (transaction.coin === coin && transaction.amount > 0) lastValue += transaction.value;
+      }
+      lines.push(`${leftPad(amount, { length: 3, round: false })} ${coin} ${leftPad(lastValue)} ${leftPad(rate * amount)} ${leftPad(rate * amount - lastValue)}`);
+    }
+
+    lines.push('');
+    lines.push('history   buy  sell  diff');
+    lines.push(` .5 BTC ${leftPad(1129.60 + 16.83)} ${leftPad(3185.57 - 48.18)} ${leftPad(1990.96)}`);
+
+    lines.push('</pre>');
+    lines.push('<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a');
 
     if (options.return) {
-      return message;
+      return lines.join('\n');
     }
     else if (notify) {
       console.log(`[INFO] ALERT We have a ${profit} of € ${amount}`);
-      console.log('[INFO] currentRate:     ', leftPad(currentRate), 'btc:', leftPad(btcRate * 0.5), 'eth:', leftPad(ethRate * 10), 'ltc:', leftPad(ltcRate * 15));
-      console.log('[INFO] lastRate (redis):', leftPad(lastRate), 'btc:', leftPad(btcRedis), 'eth:', leftPad(ethRedis), 'ltc:', leftPad(ltcRedis));
 
-      redis.set(`BTC`, btcRate * 0.5);
-      redis.set(`ETH`, ethRate * 10);
-      redis.set(`LTC`, ltcRate * 15);
+      for (const currentRatesCoin in currentRatesCoins) {
+        redis.set(currentRatesCoin, currentRatesCoins[currentRatesCoin]);
+      }
 
-      send(message);
+      send(lines.join('\n'));
     } else {
       console.log(`[INFO] We have a ${profit} of € ${amount}`);
     }

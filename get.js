@@ -1,6 +1,7 @@
 'use strict';
 
 const https = require('https');
+const BCH_RATE = process.env.BCH_RATE ? parseFloat(process.env.BCH_RATE, 10) : 544.98;
 
 function getJSON(url) {
   return new Promise((resolve, reject) => {
@@ -24,6 +25,10 @@ function getJSON(url) {
 }
 
 function getRate(coin) {
+  // BCH is not implemented in coinbase yet, so we fake it untill we make it.
+  // We can update it via process.env.BCH_RATE.
+  if (coin === 'BCH') return BCH_RATE;
+
   return new Promise(async (resolve, reject) => {
     try {
       const rates = await getJSON(`https://api.coinbase.com/v2/exchange-rates?currency=${coin}`);
