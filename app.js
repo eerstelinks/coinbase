@@ -149,7 +149,8 @@ async function run(options = { return: false }) {
         redis.set(currentRatesCoin, currentRatesCoins[currentRatesCoin]);
       }
 
-      send(lines.join('\n'));
+      if (PRODUCTION) send(lines.join('\n'));
+      else console.log(lines.join('\n'));
     } else {
       console.log(`[INFO] We have a ${profit} of € ${amount}`);
     }
