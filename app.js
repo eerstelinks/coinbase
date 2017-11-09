@@ -137,7 +137,7 @@ async function run(options = { return: false }) {
     lines.push(` .5 BTC ${leftPad(1129.60 + 16.83)} ${leftPad(3185.57 - 48.18)} ${leftPad(1990.96)}`);
 
     lines.push('</pre>');
-    lines.push('<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a');
+    lines.push('<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a>');
 
     if (options.return) {
       return lines.join('\n');
