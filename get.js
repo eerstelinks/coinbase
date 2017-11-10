@@ -25,15 +25,19 @@ function getJSON(url) {
 }
 
 function getRate(coin) {
-  // BCH is not implemented in coinbase yet, so we fake it untill we make it.
-  // We can update it via process.env.BCH_RATE.
-  if (coin === 'BCH') return BCH_RATE;
-
   return new Promise(async (resolve, reject) => {
     try {
-      const rates = await getJSON(`https://api.coinbase.com/v2/exchange-rates?currency=${coin}`);
-      const euro = parseFloat(rates.data.rates.EUR, 10);
-      return resolve(euro);
+      switch (coin) {
+        case 'BCH':
+          const coinmarketcapRates = await getJSON(`https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/?convert=EUR`);
+          const bitcoinCashEuro = parseFloat(coinmarketcapRates[0].price_eur, 10);
+          return resolve(bitcoinCashEuro);
+          break;
+        default:
+          const coinbaseRates = await getJSON(`https://api.coinbase.com/v2/exchange-rates?currency=${coin}`);
+          const euro = parseFloat(coinbaseRates.data.rates.EUR, 10);
+          return resolve(euro);
+      }
     } catch(error) {
       return reject(error);
     }
