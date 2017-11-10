@@ -1,7 +1,6 @@
 'use strict';
 
 const https = require('https');
-const BCH_RATE = process.env.BCH_RATE ? parseFloat(process.env.BCH_RATE, 10) : 544.98;
 
 function getJSON(url) {
   return new Promise((resolve, reject) => {
