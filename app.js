@@ -159,6 +159,6 @@ async function run(options = { return: false }) {
 http.createServer(async (req, res) => {
   const diff = await run({ return: true });
   res.writeHead(200, {'Content-Type': 'text/html'});
-  res.write(`<!doctype html style="height: 100%;"><meta charset="utf-8"><title>${DESCRIPTION}</title><body style="font-family: monospace; height:100%; display: flex; align-items: center; justify-content: center;"><div style="text-align: center;"><p>${diff}</p><p>Xusjes from Christian &amp; Adriaan`);
+  res.write(`<!doctype html style="height: 100%;"><meta charset="utf-8"><title>${DESCRIPTION}</title><meta name="viewport" content="width=device-width, initial-scale=1"><body style="font-family: Arial; color: #333; font-size: 14px; height:100%; display: flex; align-items: center; justify-content: center;"><div style="text-align: center;"><p>${diff}</p><p>Xusjes from Christian &amp; Adriaan`);
   res.end();
 }).listen(process.env.PORT || 3000);
