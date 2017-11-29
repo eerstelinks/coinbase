@@ -14,30 +14,42 @@ const ALERT_DELTA = parseFloat(process.env.ALERT_DELTA, 10) || 100;
 const TRANSACTIONS = [{
   coin: 'BTC',
   amount: +0.5,
-  value: 1129.60 + 16.83
+  value: 1129.60,
+  fee: 16.83
 }, {
   coin: 'ETH',
   amount: +10,
-  value: 2139.95 + 31.89
+  value: 2139.95,
+  fee: 31.89
 }, {
   coin: 'LTC',
   amount: +15,
-  value: 661.23 + 9.85
+  value: 661.2,
+  fee: 9.85
 }, {
   coin: 'BCH',
   amount: +0.5,
-  value: 0
+  value: 0,
+  fee: 0
 }, {
   coin: 'BTC',
   amount: -0.5,
-  value: 3185.57 //- 48.18
+  value: 3185.57,
+  fee: 48.18
 }, {
   coin: 'ETH',
   amount: +5,
-  value: 1367.70 + 20.38
+  value: 1367.70,
+  fee: 20.38
+}, {
+  coin: 'BTC',
+  amount: +0.22459504,
+  value: 1781.59,
+  fee: 26.55
 }];
 
 const transactions = {};
+let fees = 0;
 let totalInvested = 0;
 
 for (const transaction of TRANSACTIONS) {
@@ -53,7 +65,13 @@ for (const transaction of TRANSACTIONS) {
   // What did we invest in total (invested money - money sold coins)
   if (transaction.amount < 0) totalInvested -= transaction.value;
   else totalInvested += transaction.value;
+
+  // Calculate the fees
+  fees += transaction.fee;
 }
+
+// Add the fees to the investment
+totalInvested = totalInvested + fees;
 
 if (PRODUCTION === true && process.env.CRON_TIME) {
   const CronJob = require('cron').CronJob;
@@ -64,8 +82,26 @@ if (PRODUCTION === true && process.env.CRON_TIME) {
   run();
 }
 
-function leftPad(number, options = { length: 5, round: true }) {
+function decimalPlaces(num) {
+  var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+  if (!match) { return 0; }
+  return Math.max(
+       0,
+       // Number of digits right of decimal point.
+       (match[1] ? match[1].length : 0)
+       // Adjust for scientific notation.
+       - (match[2] ? +match[2] : 0));
+}
+
+function leftPad(number, options = { length: 6, round: true }) {
   if (options.round) number = Math.round(number)
+  if (decimalPlaces(number) > 0) {
+    // Remove padding when it's a zero: `0.121` should be `.21` instead of
+    // `0.2`. But when it does not start with a zero is should show `1.1` for
+    // `1.12` instead of `.12`.
+    const zeroPadding = (number > 0 && number < 1) ? 1 : 2;
+    number = number.toFixed(options.length - zeroPadding);
+  }
   return (' '.repeat(options.length) + number).slice(-options.length);
 }
 
@@ -80,6 +116,7 @@ async function run(options = { return: false }) {
 
     const rates = await Promise.all(promises);
 
+    const lastRatesCoins = {};
     const currentRates = {};
     const currentRatesCoins = {};
     let counter = 0;
@@ -92,6 +129,7 @@ async function run(options = { return: false }) {
       const coinAmount = transactions[coinName];
       const isRedis = !!(counter % 2);
       if (isRedis) {
+        lastRatesCoins[coinName] = rate;
         lastRate += rate;
       }
       else {
@@ -110,28 +148,37 @@ async function run(options = { return: false }) {
       console.log(`notify because ${currentRate} > (${lastRate} + ${ALERT_DELTA})`);
       notify = true;
     } else {
-      console.log(`don't notify currentRate: ${currentRate} lastRate: ${lastRate} ALERT_DELTA: ${ALERT_DELTA}`);
+      console.log(`do not notify currentRate: ${currentRate} lastRate: ${lastRate} ALERT_DELTA: ${ALERT_DELTA}`);
     }
 
     const profit = (currentRate - totalInvested < 0) ? 'loss' : 'profit';
     const amount = Math.round((currentRate - totalInvested < 0) ? (currentRate - totalInvested) * -1 : currentRate - totalInvested);
     const lines = [`We have a <strong>${profit}</strong> of <strong>€ ${amount}</strong>`];
     lines.push('<pre>');
-    lines.push('         buy   now  diff');
+    lines.push('          now  rev. last');
 
     for (const coin in transactions) {
       const amount = transactions[coin];
       const rate = currentRates[coin];
-      let lastValue = 0;
+      let revenue = 0;
       for (const transaction of TRANSACTIONS) {
-        if (transaction.coin === coin && transaction.amount > 0) lastValue += transaction.value;
+        if (transaction.coin === coin) {
+           if (transaction.amount > 0) {
+             revenue -= transaction.value;
+           } else {
+             revenue += transaction.value;
+           }
+        }
       }
-      lines.push(`${leftPad(amount, { length: 2, round: false })} ${coin} ${leftPad(lastValue)} ${leftPad(rate * amount)} ${leftPad(rate * amount - lastValue)}`);
+
+      revenue = revenue + rate * amount;
+      const diff = (rate * amount) * 100 / lastRatesCoins[coin] - 100;
+
+      lines.push(`${leftPad(amount, { length: 3, round: false })} ${coin}${leftPad(rate * amount)}${leftPad(revenue)}${leftPad(diff, { length: 4, round: true })}%`);
     }
 
     lines.push('');
-    lines.push('history  buy  sell  diff');
-    lines.push(`.5 BTC ${leftPad(1129.60 + 16.83)} ${leftPad(3185.57 - 48.18)} ${leftPad(1990.96)}`);
+    lines.push(`Transaction costs ${leftPad(fees)}`);
 
     lines.push('</pre>');
     lines.push('<a href="https://coinbase.com/charts">coinbase.com</a>, <a href="https://coins.eerstelinks.nl">coins.eerstelinks.nl</a>');
